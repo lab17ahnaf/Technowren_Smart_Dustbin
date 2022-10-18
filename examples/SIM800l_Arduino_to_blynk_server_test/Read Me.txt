@@ -1,0 +1,1 @@
+This sketch sends data to blynk server which can be visualize by gauze monitor.
