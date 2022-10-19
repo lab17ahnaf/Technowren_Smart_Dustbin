@@ -1,5 +1,13 @@
 #include <Arduino.h>
 #include <_config.h>
+unsigned long nowTime=0;
+void servo_pwm(int x, int pin){
+  int val = (x*10.25)+500;
+  digitalWrite(pin,HIGH);
+  delayMicroseconds(val);
+  digitalWrite(pin,LOW);
+  delay(10);
+  }
 
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------
@@ -7,7 +15,7 @@
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
-#include <Servo.h>
+#include <ServoTimer2.h>
 #include <HCSR04.h>
 
 //-----------------------------------------------------------------------
@@ -18,17 +26,17 @@
 
 //-----------------------------------------------------------------------
 /* Servo Config */
-#define Servo_Attach 10
+#define Servo_Attach 5
 //-----------------------------------------------------------------------
 
 HCSR04 hcsr04(HSSR04_Trig, HSSR04_Echo);
-Servo servo;
+ServoTimer2 servo;
 
 //-----------------------------------------------------------------------
 /* 'Auto lid open' Config */
-const int Lid_Opening_Distance = 50; // In cm
-const int Lid_Halt_Duration = 5000;  // In ms
-const int Lid_Halt_Offset = 4000;    // In ms
+const int Lid_Opening_Distance = 10; // In cm
+const int Lid_Halt_Duration = 2000;  // In ms
+const int Lid_Halt_Offset = 0;       // In ms
 //-----------------------------------------------------------------------
 
 //-----------------------------------------------------------------------
@@ -74,7 +82,7 @@ char pass[] = NETWORK_PASS;
 //-----------------------------------------------------------------------
 // or Software Serial on Uno, Nano
 #include <SoftwareSerial.h>
-SoftwareSerial SerialAT(2, 3); // RX, TX
+SoftwareSerial SerialAT(7, 10); // RX, TX
 TinyGsm modem(SerialAT);
 
 //-----------------------------------------------------------------------
@@ -82,7 +90,7 @@ TinyGsm modem(SerialAT);
 BlynkTimer timer;
 #define INTERVAL 1000L
 
-int value = 55;
+int value = 10;
 
 /************************************************************************************
  *  This function sends Arduino's up time every second to Virtual Pin.
@@ -93,7 +101,7 @@ void SendDhtData()
 {
   // You can send any value at any time.
   // Please don't send more that 10 values per second.
-  Blynk.virtualWrite(V0, value);
+  Blynk.virtualWrite(V0, value++);
   //-----------------------------------------------------------------------
 }
 
@@ -102,6 +110,7 @@ void setup()
   //-----------------------------------------------------------
   // Debug console
   Serial.begin(115200);
+  pinMode(6, OUTPUT);
   delay(10);
   //-----------------------------------------------------------
   // Set GSM module baud rate
@@ -145,16 +154,16 @@ void setup()
  **********************************************************************************/
 void loop()
 {
-  if (Serial.available() > 0)
-  {
-    value = Serial.parseInt();
-    Serial.print("Weight of the bucket: ");
-    Serial.println(value);
-    Blynk.virtualWrite(V0, value);
-  }
+  // if (Serial.available() > 0)
+  // {
+  //   value = Serial.parseInt();
+  //   Serial.print("Weight of the bucket: ");
+  //   Serial.println(value);
+  //   Blynk.virtualWrite(V0, value);
+  // }
   Blynk.run();
-  //  timer.run();
-  Serial.println("I can do other things!!");
+  timer.run();
+  // Serial.println("I can do other things!!");
 
   //---------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------
@@ -162,7 +171,7 @@ void loop()
   //---------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------
 
-  if (millis() - clock_lidOpen > Lid_Halt_Duration)
+   if (millis() - clock_lidOpen > Lid_Halt_Duration)
   {
     instantaneous_distance = int(hcsr04.dist());
     flag = true;
@@ -170,11 +179,13 @@ void loop()
 
   Serial.println(instantaneous_distance);
 
-  if (instantaneous_distance < Lid_Opening_Distance)
+  if (instantaneous_distance < Lid_Opening_Distance && instantaneous_distance!=0)
   {
     if (flag == true)
     {
-      servo.write(90);
+      //servo.write(90);
+      nowTime=millis();
+      while(millis()-nowTime<1000) servo_pwm(0,6);
       lid_open = true;
       clock_lidOpen = millis();
       flag = false;
@@ -183,9 +194,13 @@ void loop()
   else if (lid_open)
   {
     clock_lidOpen = millis() + Lid_Halt_Offset;
-    servo.write(0);
+    //servo.write(0);
+    nowTime=millis();
+      while(millis()-nowTime<1000) servo_pwm(180,6);
     lid_open = false;
   }
+  
+//  servo.write(0);
 
   //---------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------
