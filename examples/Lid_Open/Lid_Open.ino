@@ -1,6 +1,6 @@
 #include <Servo.h>
 #include <HCSR04.h>
-//Fix
+
 //-----------------------------------------------------------------------
 /* Sonar Config */
 #define HSSR04_Trig 2
@@ -17,21 +17,21 @@ Servo servo;
 
 //-----------------------------------------------------------------------
 /* 'Auto lid open' Config */
-const int Lid_Opening_Distance = 50; //In cm
-const int Lid_Halt_Duration = 5000; //In ms
-const int Lid_Halt_Offset = 4000; //In ms
+const int Lid_Opening_Distance = 50; // In cm
+const int Lid_Halt_Duration = 5000;  // In ms
+const int Lid_Halt_Offset = 4000;    // In ms
 //-----------------------------------------------------------------------
-
 
 //-----------------------------------------------------------------------
 /* 'Auto lid open' global variables */
 float instantaneous_distance = 250;
-long timer = 0;
+long clock_lidOpen = 0;
 bool flag = true;
 bool lid_open = false;
 //-----------------------------------------------------------------------
 
-void setup() {
+void setup()
+{
   Serial.begin(9600);
 
   //-----------------------------------------------------------------------
@@ -42,28 +42,30 @@ void setup() {
   //-----------------------------------------------------------------------
 }
 
-void loop() {
-  if (millis() - timer > Lid_Halt_Duration) {
+void loop()
+{
+  if (millis() - clock_lidOpen > Lid_Halt_Duration)
+  {
     instantaneous_distance = int(hcsr04.dist());
     flag = true;
   }
 
   Serial.println(instantaneous_distance);
 
-  if (instantaneous_distance < Lid_Opening_Distance) {
-    if (flag == true) {
+  if (instantaneous_distance < Lid_Opening_Distance)
+  {
+    if (flag == true)
+    {
       servo.write(90);
       lid_open = true;
-      timer = millis();
+      clock_lidOpen = millis();
       flag = false;
     }
-
   }
-  else if (lid_open) {
-    timer = millis() + Lid_Halt_Offset;
+  else if (lid_open)
+  {
+    clock_lidOpen = millis() + Lid_Halt_Offset;
     servo.write(0);
     lid_open = false;
   }
-
-
 }
