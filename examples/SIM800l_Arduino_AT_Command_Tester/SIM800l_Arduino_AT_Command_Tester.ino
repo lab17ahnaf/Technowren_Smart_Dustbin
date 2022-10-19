@@ -1,6 +1,6 @@
 #include <SoftwareSerial.h>
 
-SoftwareSerial gsm(2,3);
+SoftwareSerial gsm(7,10); // RX, TX
 void setup(){
   Serial.begin(9600);
   gsm.begin(9600);

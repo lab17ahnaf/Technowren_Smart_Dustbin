@@ -34,7 +34,7 @@ char pass[] = "";
 //-----------------------------------------------------------------------
 // or Software Serial on Uno, Nano
 #include <SoftwareSerial.h>
-SoftwareSerial SerialAT(2, 3); // RX, TX
+SoftwareSerial SerialAT(7,10); // RX, TX
 TinyGsm modem(SerialAT);
 
 BlynkTimer timer;
